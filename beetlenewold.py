@@ -5,8 +5,15 @@ import time
 import os
 import sys
 import serial
-import winsound
-import threading 
+import threading
+
+# Safely handle conditional system properties
+winsound = None
+if sys.platform == "win32":
+    try:
+        import winsound
+    except ImportError:
+        pass
 
 # ==========================================
 # CONFIGURATIONS & API DETAILS
@@ -35,9 +42,13 @@ except Exception as e:
 
 def play_alarm_tone():
     try:
-        winsound.Beep(2200, 3500)
+        if winsound is not None:
+            winsound.Beep(2200, 3500)
+        else:
+            print("\a")
     except Exception as e:
-        print("\a")
+        pass
+
 def trigger_hardware_audio_signal():
     threading.Thread(target=play_alarm_tone, daemon=True).start()
 
@@ -149,29 +160,13 @@ def draw_detections(display, predictions, scale_x=1.0, scale_y=1.0):
     return display, beetle_count
 
 
-def show_menu():
-    print("\n")
-    print("=" * 45)
-    print("        AGRISHIELD - Beetle Detection")
-    print("=" * 45)
-    print("  [1]  Webcam / USB Camera (live feed)")
-    print("  [2]  Upload Image (scan a photo)")
-    print("  [3]  Stream URL (IP cam / Pi camera)")
-    print("=" * 45)
-    while True:
-        choice = input("  Choose option (1/2/3): ").strip()
-        if choice in ["1", "2", "3"]:
-            return choice
-        print("  Invalid. Enter 1, 2 or 3.")
-
-
 def find_camera():
     for index in [0, 1, 2]:
         cap = cv2.VideoCapture(index)
         if cap.isOpened():
             ret, _ = cap.read()
             if ret:
-                print(f"Camera found at index {index}")
+                print(f"[{time.strftime('%X')}] Camera found at index {index}")
                 return cap
         cap.release()
     return None
@@ -304,39 +299,17 @@ def image_mode():
     cv2.destroyAllWindows()
 
 
-def stream_mode():
-    print("\n AGRISHIELD - Stream Mode")
-    print("Examples:")
-    print("  IP Webcam app (Android): http://192.168.x.x:8080/video")
-    print("  Pi camera stream:        http://192.168.x.x:5000/stream")
-    print("  RTSP camera:             rtsp://username:password@192.168.x.x/stream")
-
-    url = input("\nEnter stream URL: ").strip()
-
-    print("Connecting to stream...")
-    cap = cv2.VideoCapture(url)
-
-    if not cap.isOpened():
-        print("Could not connect to stream. Check the URL and try again.")
-        return
-
-    print("Stream connected! Press Q to quit.")
-    camera_mode(cap)
-
-
 if __name__ == "__main__":
-    choice = show_menu()
-
-    if choice == "1":
-        cap = find_camera()
-        if cap is not None:
-            camera_mode(cap)
-        else:
-            print("No camera found. Switching to image mode.")
-            image_mode()
-
-    elif choice == "2":
+    print("\n" + "=" * 45)
+    print("        AGRISHIELD - Initialization")
+    print("=" * 45)
+    print("Checking for connected camera devices...")
+    
+    # Check automatically for an available webcam feed
+    cap = find_camera()
+    if cap is not None:
+        print(">>> Camera feed detected automatically. Launching Live Mode...")
+        camera_mode(cap)
+    else:
+        print(">>> No camera devices found. Defaulting to Image Upload Mode...")
         image_mode()
-
-    elif choice == "3":
-        stream_mode()
