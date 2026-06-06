@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgriShield</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --green:#1a7a4a;--green-light:#e8f5ee;--green-mid:#2d9e62;
+    --red:#c0392b;--red-light:#fdf0ee;
+    --text:#1a1a1a;--muted:#666;--border:#ddd;--bg:#fafaf8;--card:#fff;
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+  header{background:var(--card);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .logo-icon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2}
+  .logo-name{font-family:'DM Serif Display',serif;font-size:20px;color:var(--green);letter-spacing:0.3px}
+  .logo-tag{font-size:11px;color:var(--muted);margin-top:-2px}
+  .status-badge{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--green);background:var(--green-light);padding:5px 12px;border-radius:20px;border:1px solid #b2d8c4}
+  .dot{width:7px;height:7px;background:var(--green-mid);border-radius:50%;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  .main{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 60px)}
+
+  nav{background:var(--card);border-right:1px solid var(--border);padding:1.5rem 0}
+  nav a{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--muted);text-decoration:none;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
+  nav a.active{color:var(--green);background:var(--green-light);border-left:3px solid var(--green);font-weight:500}
+  nav a:hover:not(.active){background:#f5f5f3;color:var(--text)}
+  nav a svg{width:17px;height:17px;flex-shrink:0}
+  nav .section-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#aaa;padding:16px 20px 6px;font-weight:500}
+
+  .content{padding:2rem}
+  .page{display:none}
+  .page.active{display:block}
+
+  h1{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;margin-bottom:4px}
+  .subtitle{font-size:14px;color:var(--muted);margin-bottom:1.8rem}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:2rem}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem}
+  .stat-label{font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+  .stat-val{font-family:'DM Mono',monospace;font-size:26px;font-weight:500}
+  .stat-val.green{color:var(--green)}
+  .stat-val.red{color:var(--red)}
+  .stat-sub{font-size:12px;color:var(--muted);margin-top:3px}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:2rem}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.2rem}
+  .card-title{font-size:14px;font-weight:500;margin-bottom:1rem;color:var(--text)}
+
+  .alert-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0}
+  .alert-item:last-child{border-bottom:none}
+  .alert-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+  .alert-dot.red{background:var(--red)}
+  .alert-dot.green{background:var(--green-mid)}
+  .alert-dot.yellow{background:#e8a020}
+  .alert-text{font-size:13px;line-height:1.5}
+  .alert-time{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .feed-box{background:#111;border-radius:10px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .feed-box .scan-line{position:absolute;left:0;right:0;height:2px;background:rgba(45,158,98,0.6);animation:scan 3s linear infinite;top:0}
+  @keyframes scan{0%{top:0}100%{top:100%}}
+  .feed-box .feed-label{color:#fff;font-size:13px;opacity:0.5;text-align:center}
+  .feed-icon{color:#2d9e62;margin-bottom:8px}
+  .detection-box{position:absolute;border:2px solid #2d9e62;border-radius:3px;animation:blink 1.5s infinite}
+  @keyframes blink{0%,100%{border-color:#2d9e62}50%{border-color:#1a7a4a}}
+
+  .mode-btns{display:flex;gap:8px;margin-bottom:1.5rem}
+  .mode-btn{padding:8px 16px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);transition:all 0.15s;display:flex;align-items:center;gap:6px}
+  .mode-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .mode-btn svg{width:14px;height:14px}
+
+  .alert-banner{background:var(--red-light);border:1px solid #f0b3ac;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+  .alert-banner svg{width:20px;height:20px;color:var(--red);flex-shrink:0}
+  .alert-banner-text{font-size:14px;color:var(--red)}
+  .alert-banner-text strong{font-weight:500}
+
+  .clear-banner{background:var(--green-light);border:1px solid #b2d8c4;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+  .clear-banner svg{width:20px;height:20px;color:var(--green);flex-shrink:0}
+  .clear-banner-text{font-size:14px;color:var(--green)}
+
+  .log-table{width:100%;font-size:13px;border-collapse:collapse}
+  .log-table th{text-align:left;font-size:11px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);padding:6px 12px;background:#f8f8f6;border-bottom:1px solid var(--border)}
+  .log-table td{padding:10px 12px;border-bottom:1px solid #f0f0f0;color:var(--text)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-family:'DM Mono',monospace;font-weight:500}
+  .badge.red{background:#fde8e8;color:var(--red)}
+  .badge.green{background:var(--green-light);color:var(--green)}
+  .badge.yellow{background:#fef5e7;color:#b07a10}
+
+  .settings-section{margin-bottom:2rem}
+  .settings-section h3{font-size:14px;font-weight:500;margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  .setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f5f5f3}
+  .setting-label{font-size:14px}
+  .setting-desc{font-size:12px;color:var(--muted);margin-top:2px}
+  .toggle{width:40px;height:22px;background:#ddd;border-radius:11px;cursor:pointer;position:relative;transition:background 0.2s;border:none}
+  .toggle.on{background:var(--green)}
+  .toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+  .toggle.on::after{left:21px}
+  input[type=range]{width:120px;accent-color:var(--green)}
+  .range-val{font-family:'DM Mono',monospace;font-size:13px;min-width:28px;text-align:right;color:var(--text)}
+
+  .photo-drop{border:2px dashed var(--border);border-radius:10px;padding:2.5rem;text-align:center;cursor:pointer;transition:all 0.2s}
+  .photo-drop:hover{border-color:var(--green-mid);background:var(--green-light)}
+  .photo-drop svg{width:32px;height:32px;color:var(--muted);margin-bottom:8px}
+  .photo-drop p{font-size:14px;color:var(--muted)}
+  .photo-drop span{font-size:12px;color:#aaa}
+
+  @media(max-width:720px){
+    .stats{grid-template-columns:1fr 1fr}
+    .grid-2{grid-template-columns:1fr}
+    .main{grid-template-columns:1fr}
+    nav{display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border);padding:0}
+    nav a{flex-direction:column;gap:4px;padding:10px 14px;font-size:11px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap}
+    nav a.active{border-left:none;border-bottom:3px solid var(--green)}
+    nav .section-label{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4z" stroke-width="0" fill="#fff"/><path d="M12 6v2M12 16v2M6 12h2M16 12h2"/></svg>
+    </div>
+    <div>
+      <div class="logo-name">AgriShield</div>
+      <div class="logo-tag">Beetle Detection System</div>
+    </div>
+  </div>
+  <div class="status-badge"><span class="dot"></span> Monitoring active</div>
+</header>
+
+<div class="main">
+  <nav id="sidebar">
+    <div class="section-label">Overview</div>
+    <a class="active" onclick="go('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a onclick="go('detection',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Live Detection
+    </a>
+    <div class="section-label">Records</div>
+    <a onclick="go('logs',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Detection Logs
+    </a>
+    <div class="section-label">System</div>
+    <a onclick="go('settings',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="page active">
+      <h1>Dashboard</h1>
+      <p class="subtitle">Real-time crop protection overview</p>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Beetles Today</div>
+          <div class="stat-val red">3</div>
+          <div class="stat-sub">↑ 2 from yesterday</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Scans Today</div>
+          <div class="stat-val">127</div>
+          <div class="stat-sub">Running since 6:00 AM</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Alerts Sent</div>
+          <div class="stat-val">2</div>
+          <div class="stat-sub">via Telegram</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">System Status</div>
+          <div class="stat-val green">OK</div>
+          <div class="stat-sub">Arduino + Camera</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Camera Feed Preview</div>
+          <div class="feed-box">
+            <div class="scan-line"></div>
+            <div class="detection-box" style="top:30%;left:20%;width:80px;height:60px"></div>
+            <div style="text-align:center">
+              <svg class="feed-icon" style="width:28px;height:28px;display:block;margin:0 auto 6px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7 16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              <div class="feed-label">Live feed active<br/>Webcam / Index 0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Recent Alerts</div>
+          <div class="alert-item">
+            <div class="alert-dot red"></div>
+            <div>
+              <div class="alert-text">2 beetles detected — Section A</div>
+              <div class="alert-time">Today, 11:42 AM · Telegram sent</div>
+            </div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot red"></div>
+            <div>
+              <div class="alert-text">1 beetle detected — Section B</div>
+              <div class="alert-time">Today, 9:15 AM · Telegram sent</div>
+            </div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot green"></div>
+            <div>
+              <div class="alert-text">System started, no detections</div>
+              <div class="alert-time">Today, 6:00 AM</div>
+            </div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot yellow"></div>
+            <div>
+              <div class="alert-text">Camera reconnected after dropout</div>
+              <div class="alert-time">Yesterday, 3:20 PM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETECTION -->
+    <div id="detection" class="page">
+      <h1>Live Detection</h1>
+      <p class="subtitle">Choose input source and run beetle scan</p>
+
+      <div class="mode-btns">
+        <button class="mode-btn active" onclick="setMode(this,'webcam')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7 16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          Webcam
+        </button>
+        <button class="mode-btn" onclick="setMode(this,'image')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Image
+        </button>
+        <button class="mode-btn" onclick="setMode(this,'stream')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+          Stream URL
+        </button>
+      </div>
+
+      <div id="mode-webcam">
+        <div class="clear-banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <div class="clear-banner-text"><strong>All clear</strong> — No beetles detected in current frame</div>
+        </div>
+        <div class="feed-box" style="max-width:640px">
+          <div class="scan-line"></div>
+          <div style="text-align:center">
+            <svg class="feed-icon" style="width:32px;height:32px;display:block;margin:0 auto 8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7 16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <div class="feed-label">Webcam feed running<br/><span style="font-size:11px;opacity:0.4">Press Q in terminal to stop</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mode-image" style="display:none">
+        <div class="photo-drop" onclick="alert('Run image_mode() in your Python script to scan a local image.')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <p>Drag & drop or click to select an image</p>
+          <span>JPG, PNG supported · Scanned via Roboflow API</span>
+        </div>
+      </div>
+
+      <div id="mode-stream" style="display:none">
+        <div class="card" style="max-width:500px">
+          <div class="card-title">Stream URL</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" placeholder="http://192.168.x.x:8080/video" style="flex:1;padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg)"/>
+            <button onclick="alert('Connect to stream via stream_mode() in your Python script')" style="padding:8px 16px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Connect</button>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:10px">
+            Examples: IP Webcam (Android) · Pi camera stream · RTSP camera
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="logs" class="page">
+      <h1>Detection Logs</h1>
+      <p class="subtitle">History of all beetle detections and scans</p>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Source</th>
+              <th>Beetles</th>
+              <th>Confidence</th>
+              <th>Alert</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>11:42 AM</td><td>Webcam</td><td><span class="badge red">2 detected</span></td><td style="font-family:'DM Mono',monospace;font-size:12px">84%</td><td><span class="badge red">Sent</span></td></tr>
+            <tr><td>11:12 AM</td><td>Webcam</td><td><span class="badge green">Clear</span></td><td style="font-family:'DM Mono',monospace;font-size:12px">—</td><td><span class="badge green">None</span></td></tr>
+            <tr><td>10:45 AM</td><td>Image</td><td><span class="badge green">Clear</span></td><td style="font-family:'DM Mono',monospace;font-size:12px">—</td><td><span class="badge green">None</span></td></tr>
+            <tr><td>9:15 AM</td><td>Webcam</td><td><span class="badge red">1 detected</span></td><td style="font-family:'DM Mono',monospace;font-size:12px">91%</td><td><span class="badge red">Sent</span></td></tr>
+            <tr><td>8:30 AM</td><td>Image</td><td><span class="badge yellow">1 detected</span></td><td style="font-family:'DM Mono',monospace;font-size:12px">62%</td><td><span class="badge yellow">Skipped</span></td></tr>
+            <tr><td>6:00 AM</td><td>Webcam</td><td><span class="badge green">Clear</span></td><td style="font-family:'DM Mono',monospace;font-size:12px">—</td><td><span class="badge green">None</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="page">
+      <h1>Settings</h1>
+      <p class="subtitle">Configure detection, alerts, and hardware</p>
+
+      <div class="settings-section">
+        <h3>Detection</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Confidence threshold</div>
+            <div class="setting-desc">Minimum confidence to count a detection</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" min="10" max="90" value="30" id="conf-range" oninput="document.getElementById('conf-val').textContent=this.value+'%'"/>
+            <span class="range-val" id="conf-val">30%</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Scan every N frames</div>
+            <div class="setting-desc">Run API detection every N frames (default: 15)</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" min="5" max="60" value="15" id="frame-range" oninput="document.getElementById('frame-val').textContent=this.value"/>
+            <span class="range-val" id="frame-val">15</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Alerts</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Telegram alerts</div>
+            <div class="setting-desc">Send Telegram message when beetles found</div>
+          </div>
+          <button class="toggle on" id="tg-toggle" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Alert cooldown</div>
+            <div class="setting-desc">Minimum seconds between alerts</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" min="5" max="120" value="30" id="cd-range" oninput="document.getElementById('cd-val').textContent=this.value+'s'"/>
+            <span class="range-val" id="cd-val">30s</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Hardware</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Arduino signal</div>
+            <div class="setting-desc">Send serial signal to Arduino on detection</div>
+          </div>
+          <button class="toggle on" id="ard-toggle" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Serial port</div>
+            <div class="setting-desc">Arduino COM port (check Arduino IDE)</div>
+          </div>
+          <input type="text" value="COM12" style="width:80px;padding:6px 10px;font-size:13px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;text-align:center;background:var(--bg);color:var(--text)"/>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function go(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+function setMode(btn,id){
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['webcam','image','stream'].forEach(m=>{
+    document.getElementById('mode-'+m).style.display = m===id?'block':'none';
+  });
+}
+</script>
+</body>
+</html>
